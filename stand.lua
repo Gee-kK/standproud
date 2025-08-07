@@ -22,12 +22,10 @@ local function onMessageReceived(message)
 		return
 	end
 
-	-- Skip if it's from the local player
 	if speaker.UserId == localPlayer.UserId then
 		return
 	end
 
-	-- Only print if the sender IS a master
 	if isMaster(speaker.UserId) then
 		local speakerName = speaker.Name
 		local messageText = message.Text
@@ -35,9 +33,11 @@ local function onMessageReceived(message)
 	end
 end
 
-TextChatService.OnIncomingMessage = function(message)
+TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 	local properties = Instance.new("TextChatMessageProperties")
+	properties.Text = message.Text
 	onMessageReceived(message)
+
 	return properties
 end
 
