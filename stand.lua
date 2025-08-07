@@ -43,7 +43,7 @@ local function targetPlr(targetPlayerName)
 	end
 
 	local function focusOnTargetHead(target)
-		local targetPlayer = Players:FindFirstChild(target.Name)
+		local targetPlayer = Players:FindFirstChild("CoolDude32w")
 		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
 			local targetHead = targetPlayer.Character.Head
 
@@ -60,19 +60,19 @@ local function targetPlr(targetPlayerName)
 	local isTargeting = false
 	script.Parent.Activated:Connect(function()
 		-- Check current active state
-		local isActive = script.Parent:GetAttribute("active")
+		local isActive = script:GetAttribute("active")
 
 		if isActive then
 			isTargeting = false
 			-- Reset attributes and values
 			selector.TargetPlayer.Value = nil
 			selector.Visible = false
-			script.Parent:SetAttribute("active", false)
+			script:SetAttribute("active", false)
 			print("Deactivated: Teleporting stopped.")
 		else
 			-- Activating
 			selector.Visible = true
-			script.Parent:SetAttribute("active", true)
+			script:SetAttribute("active", true)
 			print("Activated: Waiting for target selection.")
 
 			-- Wait for TargetPlayer's value to change
@@ -83,7 +83,7 @@ local function targetPlr(targetPlayerName)
 			local gottenTarget = selector.TargetPlayer.Value
 			if not gottenTarget then
 				print("No target selected, aborting activation.")
-				script.Parent:SetAttribute("active", false)
+				script:SetAttribute("active", false)
 				return
 			end
 
@@ -123,7 +123,7 @@ local function onMessageReceived(message)
 		local messageText = message.Text
 		
 		if messageText == "aura" then
-			followPlayer(Players:GetPlayerByUserId(speaker.UserId).Name)
+			targetPlr(Players:GetPlayerByUserId(speaker.UserId).Name)
 		end
 		print(string.format("[Chat Detected] %s: %s", speakerName, messageText))
 	end
