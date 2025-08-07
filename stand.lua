@@ -13,9 +13,9 @@ local function followPlayer(targetPlayerName)
 	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 	-- CONFIG
-	local followDistance = 4      -- Distance behind the target
-	local heightOffset = 2        -- Hover height above the ground
-	local smoothSpeed = 0.1       -- Smaller = smoother (but slower)
+	local followDistance = 3      -- Distance behind the target
+	local heightOffset = 5        -- Hover height above the ground
+	local smoothSpeed = 0.4       -- Smaller = smoother (but slower)
 
 	-- Wait for target player
 	local function waitForPlayer(name)
