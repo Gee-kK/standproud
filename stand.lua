@@ -8,47 +8,98 @@ local masters = {
 	3706023981
 }
 
-local function followPlayer(targetPlayerName)
+local function targetPlr(targetPlayerName)
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+	local selector = localPlayer.PlayerGui.geeked.main.Background.Selector
+	local camera = workspace.CurrentCamera
 
-	-- CONFIG
-	local followDistance = 4      -- Distance behind the target
-	local heightOffset = 2        -- Hover height above the ground
-	local smoothSpeed = 0.1       -- Smaller = smoother (but slower)
+	-- Function to update the character variable when the player respawns
+	local function updateCharacter()
+		character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	end
 
-	-- Wait for target player
-	local function waitForPlayer(name)
-		while true do
-			for _, plr in ipairs(Players:GetPlayers()) do
-				if plr.Name == name then
-					return plr
-				end
+	-- Connect to CharacterAdded to handle respawns
+	localPlayer.CharacterAdded:Connect(updateCharacter)
+
+	local function teleportAroundTarget(target)
+		local circleRadius = 5
+		local heightAboveTarget = 3 -- Keep a consistent height above the target
+
+		local targetPlayer = Players:FindFirstChild("CoolDude32w")
+		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			local targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+
+			-- Generate a random angle and calculate the position on the circle
+			local randomAngle = math.random() * 2 * math.pi
+			local offsetX = math.cos(randomAngle) * circleRadius
+			local offsetZ = math.sin(randomAngle) * circleRadius
+			local newPosition = Vector3.new(targetPosition.X + offsetX, targetPosition.Y + heightAboveTarget, targetPosition.Z + offsetZ)
+
+			-- Teleport the player's character
+			if character and character:FindFirstChild("HumanoidRootPart") then
+				character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
 			end
-			Players.PlayerAdded:Wait()
 		end
 	end
 
-	local targetPlayer = waitForPlayer(targetPlayerName)
-	local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
-	local targetRoot = targetCharacter:WaitForChild("HumanoidRootPart")
+	local function focusOnTargetHead(target)
+		local targetPlayer = Players:FindFirstChild(target.Name)
+		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+			local targetHead = targetPlayer.Character.Head
 
-	-- FOLLOW LOGIC
-	RunService.RenderStepped:Connect(function()
-		if not targetRoot or not humanoidRootPart then return end
+			-- Move the camera to first-person view
+			camera.CameraSubject = character:FindFirstChild("Humanoid") -- Update to reference the new character
+			camera.CameraType = Enum.CameraType.Custom
 
-		-- Position behind the target player
-		local backOffset = -targetRoot.CFrame.LookVector * followDistance
-		local hoverOffset = Vector3.new(0, heightOffset, 0)
-		local targetPosition = targetRoot.Position + backOffset + hoverOffset
+			-- Point the camera towards the target's head
+			local headPosition = targetHead.Position
+			camera.CFrame = CFrame.new(camera.CFrame.Position, headPosition)
+		end
+	end
 
-		-- Smooth movement
-		local currentPosition = humanoidRootPart.Position
-		local newPosition = currentPosition:Lerp(targetPosition, smoothSpeed)
+	local isTargeting = false
+	script.Parent.Activated:Connect(function()
+		-- Check current active state
+		local isActive = script.Parent:GetAttribute("active")
 
-		-- Set position via CFrame
-		local lookAt = targetRoot.Position
-		humanoidRootPart.CFrame = CFrame.new(newPosition, lookAt)
+		if isActive then
+			isTargeting = false
+			-- Reset attributes and values
+			selector.TargetPlayer.Value = nil
+			selector.Visible = false
+			script.Parent:SetAttribute("active", false)
+			print("Deactivated: Teleporting stopped.")
+		else
+			-- Activating
+			selector.Visible = true
+			script.Parent:SetAttribute("active", true)
+			print("Activated: Waiting for target selection.")
+
+			-- Wait for TargetPlayer's value to change
+			selector.TargetPlayer:GetPropertyChangedSignal("Value"):Wait()
+			selector.Visible = false
+			isTargeting = true
+
+			local gottenTarget = selector.TargetPlayer.Value
+			if not gottenTarget then
+				print("No target selected, aborting activation.")
+				script.Parent:SetAttribute("active", false)
+				return
+			end
+
+			-- Start teleporting
+			local teleportInterval = 0.01
+			while task.wait(teleportInterval) do
+				if isTargeting then
+					teleportAroundTarget(gottenTarget)
+					focusOnTargetHead(gottenTarget)
+				else
+					break
+				end
+			end
+
+			print("Teleporting around target.")
+		end
 	end)
 end
 
