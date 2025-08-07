@@ -14,7 +14,7 @@ local function followPlayer(targetPlayerName)
 
 	-- CONFIG
 	local followDistance = 4      -- Distance behind the target
-	local heightOffset = 3        -- Hover height above the ground
+	local heightOffset = 2        -- Hover height above the ground
 	local smoothSpeed = 0.1       -- Smaller = smoother (but slower)
 
 	-- Wait for target player
