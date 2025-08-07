@@ -30,13 +30,13 @@ end
 
 TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 	local properties = Instance.new("TextChatMessageProperties")
-
-	-- Call the detection logic
-	pcall(function()
+	
+	if properties then
 		onMessageReceived(message)
-	end)
+	else
+		warn("no properties")
+	end
 
-	-- Always return the properties object
 	return properties
 end
 
