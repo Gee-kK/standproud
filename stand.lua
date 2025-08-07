@@ -18,13 +18,8 @@ end
 
 local function onMessageReceived(message)
 	local speaker = message.TextSource
-	if not speaker then
-		return
-	end
-
-	if speaker.UserId == localPlayer.UserId then
-		return
-	end
+	if not speaker then return end
+	if speaker.UserId == localPlayer.UserId then return end
 
 	if isMaster(speaker.UserId) then
 		local speakerName = speaker.Name
@@ -35,10 +30,14 @@ end
 
 TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 	local properties = Instance.new("TextChatMessageProperties")
-	properties.Text = message.Text
-	onMessageReceived(message)
 
+	-- Call the detection logic
+	pcall(function()
+		onMessageReceived(message)
+	end)
+
+	-- Always return the properties object
 	return properties
 end
 
-print("Chat detection initialized - listening for messages...")
+print("Chat detection initialized - listening for messages…")
