@@ -18,12 +18,17 @@ end
 
 local function onMessageReceived(message)
 	local speaker = message.TextSource
-	if speaker then
-		-- Ignore messages from yourself and masters
-		if speaker.UserId == localPlayer.UserId or isMaster(speaker.UserId) then
-			return
-		end
+	if not speaker then
+		return
+	end
 
+	-- Skip if it's from the local player
+	if speaker.UserId == localPlayer.UserId then
+		return
+	end
+
+	-- Only print if the sender IS a master
+	if isMaster(speaker.UserId) then
 		local speakerName = speaker.Name
 		local messageText = message.Text
 		print(string.format("[Chat Detected] %s: %s", speakerName, messageText))
@@ -32,8 +37,8 @@ end
 
 TextChatService.OnIncomingMessage = function(message)
 	local properties = Instance.new("TextChatMessageProperties")
-	onMessageReceived(message)  -- Process the message
-	return properties  -- Always return the properties
+	onMessageReceived(message)
+	return properties
 end
 
 print("Chat detection initialized - listening for messages...")
