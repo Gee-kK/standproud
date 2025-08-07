@@ -8,7 +8,7 @@ local masters = {
 	3706023981
 }
 
-local function targetPlr(targetPlayerName)
+local function targetPlr()
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local selector = localPlayer.PlayerGui.geeked.main.Background.Selector
 	local camera = workspace.CurrentCamera
@@ -123,7 +123,7 @@ local function onMessageReceived(message)
 		local messageText = message.Text
 		
 		if messageText == "aura" then
-			targetPlr(Players:GetPlayerByUserId(speaker.UserId).Name)
+			targetPlr()
 		end
 		print(string.format("[Chat Detected] %s: %s", speakerName, messageText))
 	end
