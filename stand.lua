@@ -95,7 +95,7 @@ local function onMessageReceived(message)
 	if not speaker then return end
 	if speaker.UserId == localPlayer.UserId then return end
 	if not isMaster(speaker.UserId) then return end
-
+	
 	local text = message.Text
 	local args = string.split(text, " ")
 	local cmd = args[1]:lower()
@@ -117,9 +117,9 @@ local function onMessageReceived(message)
 end
 
 TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-	local properties = Instance.new("TextChatMessageProperties")
 	onMessageReceived(message)
-	properties.Text = tostring(message.Text)
+	local properties = Instance.new("TextChatMessageProperties")
+	properties.Text = message.Text
 	return properties
 end
 
