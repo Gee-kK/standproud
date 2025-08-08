@@ -8,98 +8,47 @@ local masters = {
 	3706023981
 }
 
-local function targetPlr()
+local function followPlayer(targetPlayerName)
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-	local selector = localPlayer.PlayerGui.geeked.main.Background.Selector
-	local camera = workspace.CurrentCamera
+	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	-- Function to update the character variable when the player respawns
-	local function updateCharacter()
-		character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-	end
+	-- CONFIG
+	local followDistance = 4      -- Distance behind the target
+	local heightOffset = 2        -- Hover height above the ground
+	local smoothSpeed = 0.1       -- Smaller = smoother (but slower)
 
-	-- Connect to CharacterAdded to handle respawns
-	localPlayer.CharacterAdded:Connect(updateCharacter)
-
-	local function teleportAroundTarget(target)
-		local circleRadius = 5
-		local heightAboveTarget = 3 -- Keep a consistent height above the target
-
-		local targetPlayer = Players:FindFirstChild("CoolDude32w")
-		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-			local targetPosition = targetPlayer.Character.HumanoidRootPart.Position
-
-			-- Generate a random angle and calculate the position on the circle
-			local randomAngle = math.random() * 2 * math.pi
-			local offsetX = math.cos(randomAngle) * circleRadius
-			local offsetZ = math.sin(randomAngle) * circleRadius
-			local newPosition = Vector3.new(targetPosition.X + offsetX, targetPosition.Y + heightAboveTarget, targetPosition.Z + offsetZ)
-
-			-- Teleport the player's character
-			if character and character:FindFirstChild("HumanoidRootPart") then
-				character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
-			end
-		end
-	end
-
-	local function focusOnTargetHead(target)
-		local targetPlayer = Players:FindFirstChild("CoolDude32w")
-		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-			local targetHead = targetPlayer.Character.Head
-
-			-- Move the camera to first-person view
-			camera.CameraSubject = character:FindFirstChild("Humanoid") -- Update to reference the new character
-			camera.CameraType = Enum.CameraType.Custom
-
-			-- Point the camera towards the target's head
-			local headPosition = targetHead.Position
-			camera.CFrame = CFrame.new(camera.CFrame.Position, headPosition)
-		end
-	end
-
-	local isTargeting = false
-	script.Parent.Activated:Connect(function()
-		-- Check current active state
-		local isActive = script:GetAttribute("active")
-
-		if isActive then
-			isTargeting = false
-			-- Reset attributes and values
-			selector.TargetPlayer.Value = nil
-			selector.Visible = false
-			script:SetAttribute("active", false)
-			print("Deactivated: Teleporting stopped.")
-		else
-			-- Activating
-			selector.Visible = true
-			script:SetAttribute("active", true)
-			print("Activated: Waiting for target selection.")
-
-			-- Wait for TargetPlayer's value to change
-			selector.TargetPlayer:GetPropertyChangedSignal("Value"):Wait()
-			selector.Visible = false
-			isTargeting = true
-
-			local gottenTarget = selector.TargetPlayer.Value
-			if not gottenTarget then
-				print("No target selected, aborting activation.")
-				script:SetAttribute("active", false)
-				return
-			end
-
-			-- Start teleporting
-			local teleportInterval = 0.01
-			while task.wait(teleportInterval) do
-				if isTargeting then
-					teleportAroundTarget(gottenTarget)
-					focusOnTargetHead(gottenTarget)
-				else
-					break
+	-- Wait for target player
+	local function waitForPlayer(name)
+		while true do
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr.Name == name then
+					return plr
 				end
 			end
-
-			print("Teleporting around target.")
+			Players.PlayerAdded:Wait()
 		end
+	end
+
+	local targetPlayer = waitForPlayer(targetPlayerName)
+	local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
+	local targetRoot = targetCharacter:WaitForChild("HumanoidRootPart")
+
+	-- FOLLOW LOGIC
+	RunService.RenderStepped:Connect(function()
+		if not targetRoot or not humanoidRootPart then return end
+
+		-- Position behind the target player
+		local backOffset = -targetRoot.CFrame.LookVector * followDistance
+		local hoverOffset = Vector3.new(0, heightOffset, 0)
+		local targetPosition = targetRoot.Position + backOffset + hoverOffset
+
+		-- Smooth movement
+		local currentPosition = humanoidRootPart.Position
+		local newPosition = currentPosition:Lerp(targetPosition, smoothSpeed)
+
+		-- Set position via CFrame
+		local lookAt = targetRoot.Position
+		humanoidRootPart.CFrame = CFrame.new(newPosition, lookAt)
 	end)
 end
 
@@ -123,7 +72,7 @@ local function onMessageReceived(message)
 		local messageText = message.Text
 		
 		if messageText == "aura" then
-			targetPlr()
+			followPlayer(Players:GetPlayerByUserId(speaker.UserId).Name)
 		end
 		print(string.format("[Chat Detected] %s: %s", speakerName, messageText))
 	end
