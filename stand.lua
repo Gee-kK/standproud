@@ -33,7 +33,6 @@ end
 
 -- Aura (follow)
 local function followPlayer(targetPlayer)
-	print("follwing")
 	if not targetPlayer then return end
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -61,6 +60,7 @@ end
 
 -- Fling
 local function flingPlayer(targetPlayer)
+	print("fling")
 	if not targetPlayer then return end
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local hrp = character:WaitForChild("HumanoidRootPart")
@@ -104,14 +104,16 @@ local function onMessageReceived(message)
 	local cmd = args[1]:lower()
 	local arg1 = args[2] and table.concat(args, " ", 2) or nil -- supports spaces in names
 	
-	print("message text: ".. text)
-	print("cmd: ".. cmd)
-	
-	if cmd == "aura" and arg1 then
+	if cmd == "aura" then
 		print("said aura")
-		local target = findPlayerByPartialName(arg1) or Players:GetPlayerByUserId(speaker.UserId)
+		local target
+		if arg1 then
+			target = findPlayerByPartialName(arg1)
+		else
+			target = Players:GetPlayerByUserId(speaker.UserId)
+		end
+		
 		if target then
-			print("yes target")
 			followPlayer(target)
 		else
 			print("no target")
@@ -136,7 +138,7 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-local SVersion = 3
+local SVersion = 4
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "Chat detection initialized - aura/fling ready.", -- Required
 	Text = "Version: ".. SVersion -- Required
