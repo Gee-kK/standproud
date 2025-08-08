@@ -119,7 +119,7 @@ end
 TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 	local properties = Instance.new("TextChatMessageProperties")
 	onMessageReceived(message)
-	properties.Text = message.Text
+	properties.Text = tostring(message.Text)
 	return properties
 end
 
