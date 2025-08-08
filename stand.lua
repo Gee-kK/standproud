@@ -131,3 +131,4 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
+print("version: ".. "1")
