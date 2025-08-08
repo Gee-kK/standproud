@@ -1,4 +1,3 @@
-print(script.Parent)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
@@ -98,11 +97,17 @@ local function onMessageReceived(message)
 	if speaker.UserId == localPlayer.UserId then return end
 	if not isMaster(speaker.UserId) then return end
 	
+	print("received message")
+	
 	local text = message.Text
 	local args = string.split(text, " ")
 	local cmd = args[1]:lower()
 	local arg1 = args[2] and table.concat(args, " ", 2) or nil -- supports spaces in names
-
+	
+	print("message text: ".. text)
+	print("args: ".. args)
+	print("cmd: ".. cmd)
+	
 	if cmd == "aura" and arg1 then
 		print("said aura")
 		local target = findPlayerByPartialName(arg1) or Players:GetPlayerByUserId(speaker.UserId)
@@ -127,3 +132,5 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
+print("parent:")
+print(script.Parent)
