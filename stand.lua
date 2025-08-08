@@ -134,4 +134,8 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-print("version: ".. "2")
+local SVersion = 2
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "Chat detection initialized - aura/fling ready.", -- Required
+	Text = "Version: ".. SVersion -- Required
+})
