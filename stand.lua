@@ -111,7 +111,10 @@ local function onMessageReceived(message)
 		print("said aura")
 		local target = findPlayerByPartialName(arg1) or Players:GetPlayerByUserId(speaker.UserId)
 		if target then
+			print("yes target")
 			followPlayer(target)
+		else
+			print("no target")
 		end
 	elseif cmd == "fling" and arg1 then
 		local target = findPlayerByPartialName(arg1)
@@ -131,4 +134,4 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-print("version: ".. "1")
+print("version: ".. "2")
