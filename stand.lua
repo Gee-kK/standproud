@@ -33,6 +33,7 @@ end
 
 -- Aura (follow)
 local function followPlayer(targetPlayer)
+	print("follwing")
 	if not targetPlayer then return end
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
