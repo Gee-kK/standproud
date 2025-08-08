@@ -121,6 +121,8 @@ local function onMessageReceived(message)
 		if target then
 			flingPlayer(target)
 		end
+	else
+		print("no cmd")
 	end
 
 	print(string.format("[Command] %s: %s", speaker.Name, text))
@@ -134,7 +136,7 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-local SVersion = 2
+local SVersion = 3
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "Chat detection initialized - aura/fling ready.", -- Required
 	Text = "Version: ".. SVersion -- Required
