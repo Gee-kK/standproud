@@ -1,3 +1,4 @@
+print(script.Parent)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
@@ -103,6 +104,7 @@ local function onMessageReceived(message)
 	local arg1 = args[2] and table.concat(args, " ", 2) or nil -- supports spaces in names
 
 	if cmd == "aura" and arg1 then
+		print("said aura")
 		local target = findPlayerByPartialName(arg1) or Players:GetPlayerByUserId(speaker.UserId)
 		if target then
 			followPlayer(target)
