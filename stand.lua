@@ -105,8 +105,8 @@ local function onMessageReceived(message)
 	local arg1 = args[2] and table.concat(args, " ", 2) or nil -- supports spaces in names
 	
 	print("message text: ".. text)
-	print("args: ".. args)
 	print("cmd: ".. cmd)
+	print("arg1: ".. arg1)
 	
 	if cmd == "aura" and arg1 then
 		print("said aura")
@@ -132,5 +132,3 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-print("parent:")
-print(script.Parent)
