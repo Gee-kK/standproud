@@ -106,7 +106,6 @@ local function onMessageReceived(message)
 	
 	print("message text: ".. text)
 	print("cmd: ".. cmd)
-	print("arg1: ".. arg1)
 	
 	if cmd == "aura" and arg1 then
 		print("said aura")
