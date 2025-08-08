@@ -8,51 +8,78 @@ local masters = {
 	3706023981
 }
 
-local function followPlayer(targetPlayerName)
+-- STATE
+local currentConnection
+local currentAction -- "aura" or "fling" or nil
+
+-- Utility: partial name matching
+local function findPlayerByPartialName(partialName)
+	partialName = partialName:lower()
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr.Name:lower():sub(1, #partialName) == partialName then
+			return plr
+		end
+	end
+end
+
+-- Stop any current action
+local function stopCurrentAction()
+	if currentConnection then
+		currentConnection:Disconnect()
+		currentConnection = nil
+	end
+	currentAction = nil
+end
+
+-- Aura (follow)
+local function followPlayer(targetPlayer)
+	if not targetPlayer then return end
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	-- CONFIG
-	local followDistance = 4      -- Distance behind the target
-	local heightOffset = 2        -- Hover height above the ground
-	local smoothSpeed = 0.1       -- Smaller = smoother (but slower)
-
-	-- Wait for target player
-	local function waitForPlayer(name)
-		while true do
-			for _, plr in ipairs(Players:GetPlayers()) do
-				if plr.Name == name then
-					return plr
-				end
-			end
-			Players.PlayerAdded:Wait()
-		end
-	end
-
-	local targetPlayer = waitForPlayer(targetPlayerName)
 	local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
 	local targetRoot = targetCharacter:WaitForChild("HumanoidRootPart")
 
-	-- FOLLOW LOGIC
-	RunService.RenderStepped:Connect(function()
-		if not targetRoot or not humanoidRootPart then return end
+	local followDistance = 4
+	local heightOffset = 2
+	local smoothSpeed = 0.1
 
-		-- Position behind the target player
+	stopCurrentAction()
+	currentAction = "aura"
+
+	currentConnection = RunService.RenderStepped:Connect(function()
+		if not targetRoot or not humanoidRootPart then return end
 		local backOffset = -targetRoot.CFrame.LookVector * followDistance
 		local hoverOffset = Vector3.new(0, heightOffset, 0)
 		local targetPosition = targetRoot.Position + backOffset + hoverOffset
-
-		-- Smooth movement
 		local currentPosition = humanoidRootPart.Position
 		local newPosition = currentPosition:Lerp(targetPosition, smoothSpeed)
-
-		-- Set position via CFrame
-		local lookAt = targetRoot.Position
-		humanoidRootPart.CFrame = CFrame.new(newPosition, lookAt)
+		humanoidRootPart.CFrame = CFrame.new(newPosition, targetRoot.Position)
 	end)
 end
 
+-- Fling
+local function flingPlayer(targetPlayer)
+	if not targetPlayer then return end
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local hrp = character:WaitForChild("HumanoidRootPart")
 
+	local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
+	local targetHrp = targetCharacter:WaitForChild("HumanoidRootPart")
+
+	stopCurrentAction()
+	currentAction = "fling"
+
+	-- Simple fling logic (velocity spike)
+	local flingForce = Instance.new("BodyVelocity")
+	flingForce.Velocity = Vector3.new(0, 9999, 0) -- yeet upwards
+	flingForce.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	flingForce.Parent = targetHrp
+
+	game.Debris:AddItem(flingForce, 0.1) -- remove after fling
+end
+
+-- Permissions
 local function isMaster(userId)
 	for _, id in ipairs(masters) do
 		if id == userId then
@@ -62,32 +89,37 @@ local function isMaster(userId)
 	return false
 end
 
+-- Handle messages
 local function onMessageReceived(message)
 	local speaker = message.TextSource
 	if not speaker then return end
 	if speaker.UserId == localPlayer.UserId then return end
+	if not isMaster(speaker.UserId) then return end
 
-	if isMaster(speaker.UserId) then
-		local speakerName = speaker.Name
-		local messageText = message.Text
-		
-		if messageText == "aura" then
-			followPlayer(Players:GetPlayerByUserId(speaker.UserId).Name)
+	local text = message.Text
+	local args = string.split(text, " ")
+	local cmd = args[1]:lower()
+	local arg1 = args[2] and table.concat(args, " ", 2) or nil -- supports spaces in names
+
+	if cmd == "aura" and arg1 then
+		local target = findPlayerByPartialName(arg1) or Players:GetPlayerByUserId(speaker.UserId)
+		if target then
+			followPlayer(target)
 		end
-		print(string.format("[Chat Detected] %s: %s", speakerName, messageText))
+	elseif cmd == "fling" and arg1 then
+		local target = findPlayerByPartialName(arg1)
+		if target then
+			flingPlayer(target)
+		end
 	end
+
+	print(string.format("[Command] %s: %s", speaker.Name, text))
 end
 
 TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 	local properties = Instance.new("TextChatMessageProperties")
-	
-	if properties then
-		onMessageReceived(message)
-	else
-		warn("no properties")
-	end
-
+	onMessageReceived(message)
 	return properties
 end
 
-print("Chat detection initialized - listening for messages…")
+print("Chat detection initialized - aura/fling ready.")
