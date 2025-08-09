@@ -61,23 +61,22 @@ end
 -- Fling
 local function flingPlayer(targetPlayer)
 	print("fling")
-	if not targetPlayer then return end
-	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-	local hrp = character:WaitForChild("HumanoidRootPart")
+	if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+	local myChar = localPlayer.Character
+	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
 
-	local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
-	local targetHrp = targetCharacter:WaitForChild("HumanoidRootPart")
+	local myHRP = myChar.HumanoidRootPart
+	local targetHRP = targetPlayer.Character.HumanoidRootPart
 
-	stopCurrentAction()
-	currentAction = "fling"
+	myHRP.CFrame = targetHRP.CFrame
 
-	-- Simple fling logic (velocity spike)
-	local flingForce = Instance.new("BodyVelocity")
-	flingForce.Velocity = Vector3.new(0, 9999, 0) -- yeet upwards
-	flingForce.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-	flingForce.Parent = targetHrp
+	local bav = Instance.new("BodyAngularVelocity")
+	bav.AngularVelocity = Vector3.new(0, 999999, 0)
+	bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+	bav.Parent = myHRP
 
-	game.Debris:AddItem(flingForce, 0.1) -- remove after fling
+	task.wait(0.3)
+	bav:Destroy()
 end
 
 -- Permissions
@@ -140,7 +139,7 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-local SVersion = 5
+local SVersion = 6
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "Chat detection initialized - aura/fling ready.", -- Required
 	Text = "Version: ".. SVersion -- Required
