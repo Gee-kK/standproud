@@ -5,7 +5,8 @@ local localPlayer = Players.LocalPlayer
 
 local masters = {
 	887517862,
-	3706023981
+	3706023981,
+	-1
 }
 
 -- STATE
@@ -29,38 +30,58 @@ local function stopCurrentAction()
 		currentConnection = nil
 	end
 	currentAction = nil
+	if localPlayer.Character.Humanoid then
+		localPlayer.Character.Humanoid.PlatformStand = false
+	end
+	
 end
 
 -- Aura (follow)
 local function followPlayer(targetPlayer)
 	if not targetPlayer then return end
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+	local hrp = character:WaitForChild("HumanoidRootPart")
+	local humanoid = character:WaitForChild("Humanoid")
 
 	local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
 	local targetRoot = targetCharacter:WaitForChild("HumanoidRootPart")
 
 	local followDistance = 4
-	local heightOffset = 2
-	local smoothSpeed = 0.1
+	local heightOffset = 4
+	local smoothSpeed = 0.5
 
 	stopCurrentAction()
 	currentAction = "aura"
 
 	currentConnection = RunService.RenderStepped:Connect(function()
-		if not targetRoot or not humanoidRootPart then return end
+		if not targetRoot or not hrp then return end
+
+		-- Prevent physics from interfering
+		humanoid.PlatformStand = true
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+
+		-- Calculate hover position behind target
 		local backOffset = -targetRoot.CFrame.LookVector * followDistance
 		local hoverOffset = Vector3.new(0, heightOffset, 0)
-		local targetPosition = targetRoot.Position + backOffset + hoverOffset
-		local currentPosition = humanoidRootPart.Position
-		local newPosition = currentPosition:Lerp(targetPosition, smoothSpeed)
-		humanoidRootPart.CFrame = CFrame.new(newPosition, targetRoot.Position)
+		local targetPos = targetRoot.Position + backOffset + hoverOffset
+
+		-- Interpolate toward position smoothly
+		local newPos = hrp.Position:Lerp(targetPos, smoothSpeed)
+
+		-- Face the same direction as the target
+		local lookAt = Vector3.new(targetRoot.Position.X, newPos.Y, targetRoot.Position.Z)
+		hrp.CFrame = CFrame.new(newPos, lookAt)
 	end)
 end
+
+
 
 -- Fling
 local function flingPlayer(targetPlayer)
 	print("fling")
+
+	-- Validation
 	if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
 	local myChar = localPlayer.Character
 	if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
@@ -68,16 +89,35 @@ local function flingPlayer(targetPlayer)
 	local myHRP = myChar.HumanoidRootPart
 	local targetHRP = targetPlayer.Character.HumanoidRootPart
 
-	myHRP.CFrame = targetHRP.CFrame
+	-- Make only HRP collide
+	for _, part in ipairs(myChar:GetChildren()) do
+		if part:IsA("BasePart") and part ~= myHRP then
+			part.CanCollide = false
+			part.Massless = true
+			part.Velocity = Vector3.zero
+		end
+	end
 
+	-- Spin tool
 	local bav = Instance.new("BodyAngularVelocity")
+	bav.Name = "FlingSpin"
 	bav.AngularVelocity = Vector3.new(0, 999999, 0)
-	bav.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+	bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+	bav.P = math.huge
 	bav.Parent = myHRP
 
-	task.wait(0.3)
+	-- Stay inside target for some time
+	local flingTime = 1.5 -- adjust
+	local start = tick()
+	while tick() - start < flingTime do
+		myHRP.CFrame = targetHRP.CFrame
+		task.wait()
+	end
+
+	-- Cleanup
 	bav:Destroy()
 end
+
 
 -- Permissions
 local function isMaster(userId)
@@ -139,7 +179,7 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-local SVersion = 6
+local SVersion = 7
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "Chat detection initialized - aura/fling ready.", -- Required
 	Text = "Version: ".. SVersion -- Required
