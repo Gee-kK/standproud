@@ -107,7 +107,7 @@ local function flingPlayer(targetPlayer)
 	bav.Parent = myHRP
 
 	-- Stay inside target for some time
-	local flingTime = 1.5 -- adjust
+	local flingTime = 4 -- adjust
 	local start = tick()
 	while tick() - start < flingTime do
 		myHRP.CFrame = targetHRP.CFrame
@@ -179,7 +179,7 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 end
 
 print("Chat detection initialized - aura/fling ready.")
-local SVersion = 7
+local SVersion = 8
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "Chat detection initialized - aura/fling ready.", -- Required
 	Text = "Version: ".. SVersion -- Required
