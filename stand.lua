@@ -6,6 +6,7 @@ local localPlayer = Players.LocalPlayer
 local masters = {
 	887517862,
 	3706023981,
+	731698,
 	-1
 }
 
